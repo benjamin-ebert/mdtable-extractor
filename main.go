@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
-	"mdtable/mdtable"
+	"github.com/benjamin-ebert/mdtable-extractor/mdtable"
 )
 
 func main() {
