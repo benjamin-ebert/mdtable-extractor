@@ -1,4 +1,4 @@
-module github.com/benjaminebert/mdtable-extractor
+module github.com/benjamin-ebert/mdtable-extractor
 
 go 1.24.1
 
