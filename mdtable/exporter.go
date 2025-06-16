@@ -81,20 +81,28 @@ func ExportToExcel(tables []Table, outputDir string) error {
     for i, table := range tables {
         sheetName := fmt.Sprintf("Table%d", i+1)
         if i == 0 {
-            f.SetSheetName("Sheet1", sheetName)
+            if err := f.SetSheetName("Sheet1", sheetName); err != nil {
+                return fmt.Errorf("setting sheet name: %w", err)
+            }
         } else {
-            f.NewSheet(sheetName)
+            if _, err := f.NewSheet(sheetName); err != nil {
+                return fmt.Errorf("creating new sheet: %w", err)
+            }
         }
 
         for j, col := range table.Header {
             cell, _ := excelize.CoordinatesToCellName(j+1, 1)
-            f.SetCellValue(sheetName, cell, col)
+            if err := f.SetCellValue(sheetName, cell, col); err != nil {
+                return fmt.Errorf("setting cell value: %w", err)
+            }
         }
 
         for rowIdx, row := range table.Rows {
             for colIdx, cellVal := range row {
                 cell, _ := excelize.CoordinatesToCellName(colIdx+1, rowIdx+2)
-                f.SetCellValue(sheetName, cell, cellVal)
+                if err := f.SetCellValue(sheetName, cell, cellVal); err != nil {
+                    return fmt.Errorf("setting cell value: %w", err)
+                }
             }
         }
     }
