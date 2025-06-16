@@ -1,0 +1,20 @@
+# Build artifacts
+mdtable-extractor
+*.exe
+*.out
+
+# Output directory (generated exports)
+output/
+
+# IDE/editor files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+
+# Go build cache (if any)
+*.test
+
+# Coverage files
+coverage.out
