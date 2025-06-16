@@ -1,14 +1,15 @@
 package mdtable
 
 import (
-    "bytes"
-    "strings"
+	"bytes"
+	"fmt"
+	"strings"
 
-    "github.com/yuin/goldmark"
-    "github.com/yuin/goldmark/extension"
-    "github.com/yuin/goldmark/text"
-    gmast "github.com/yuin/goldmark/ast"
-    extast "github.com/yuin/goldmark/extension/ast"
+	"github.com/yuin/goldmark"
+	gmast "github.com/yuin/goldmark/ast"
+	"github.com/yuin/goldmark/extension"
+	extast "github.com/yuin/goldmark/extension/ast"
+	"github.com/yuin/goldmark/text"
 )
 
 func ExtractTables(markdown string) ([]Table, error) {
@@ -22,7 +23,7 @@ func ExtractTables(markdown string) ([]Table, error) {
     reader := text.NewReader(source)
     doc := mdParser.Parser().Parse(reader)
 
-    gmast.Walk(doc, func(n gmast.Node, entering bool) (gmast.WalkStatus, error) {
+    err := gmast.Walk(doc, func(n gmast.Node, entering bool) (gmast.WalkStatus, error) {
         if tbl, ok := n.(*extast.Table); ok && entering {
             var header []string
             var rows [][]string
@@ -32,7 +33,7 @@ func ExtractTables(markdown string) ([]Table, error) {
                 var rowData []string
                 for cell := row.FirstChild(); cell != nil; cell = cell.NextSibling() {
                     buf := bytes.Buffer{}
-                    gmast.Walk(cell, func(n gmast.Node, entering bool) (gmast.WalkStatus, error) {
+                    err := gmast.Walk(cell, func(n gmast.Node, entering bool) (gmast.WalkStatus, error) {
                         if entering {
                             if tn, ok := n.(*gmast.Text); ok {
                                 buf.Write(tn.Segment.Value(source))
@@ -40,6 +41,9 @@ func ExtractTables(markdown string) ([]Table, error) {
                         }
                         return gmast.WalkContinue, nil
                     })
+                    if err != nil {
+                        return gmast.WalkStop, fmt.Errorf("walking cell: %w", err)
+                    }
                     rowData = append(rowData, strings.TrimSpace(buf.String()))
                 }
                 if isHeader {
@@ -54,6 +58,10 @@ func ExtractTables(markdown string) ([]Table, error) {
         }
         return gmast.WalkContinue, nil
     })
+
+    if err != nil {
+        return nil, fmt.Errorf("walking document: %w", err)
+    }
 
     return tables, nil
 }
