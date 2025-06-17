@@ -44,8 +44,8 @@ func ExtractTables(markdown string) ([]Table, error) {
 					if err != nil {
 						return gmast.WalkStop, fmt.Errorf("walking cell: %w", err)
 					}
-                    clean := sanitizeCellContent(buf.String())
-                    rowData = append(rowData, clean)
+					clean := sanitizeCellContent(buf.String())
+					rowData = append(rowData, clean)
 				}
 				if isHeader {
 					header = rowData
@@ -68,17 +68,17 @@ func ExtractTables(markdown string) ([]Table, error) {
 }
 
 var (
-	mathExprRE     = regexp.MustCompile(`\$(.+?)\$`)
-	latexCmdRE     = regexp.MustCompile(`\\[a-zA-Z]+\{([^{}]+)\}`)
-	whitespaceRE   = regexp.MustCompile(`\s+`)
-	backslashRE    = regexp.MustCompile(`\\`)
+	mathExprRE   = regexp.MustCompile(`\$(.+?)\$`)
+	latexCmdRE   = regexp.MustCompile(`\\[a-zA-Z]+\{([^{}]+)\}`)
+	whitespaceRE = regexp.MustCompile(`\s+`)
+	backslashRE  = regexp.MustCompile(`\\`)
 )
 
 func sanitizeCellContent(s string) string {
 	// Replace all $...$ spans
 	return mathExprRE.ReplaceAllStringFunc(s, func(match string) string {
 		content := match[1 : len(match)-1] // remove surrounding $
-		
+
 		// Unwrap LaTeX commands like \textbf{...}, \mathrm{...}, \mathbf{...}
 		for latexCmdRE.MatchString(content) {
 			content = latexCmdRE.ReplaceAllString(content, `$1`)
