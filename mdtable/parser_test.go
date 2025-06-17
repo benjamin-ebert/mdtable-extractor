@@ -34,3 +34,33 @@ func TestExtractTables(t *testing.T) {
 		t.Errorf("Unexpected row values: %v", table.Rows)
 	}
 }
+
+func TestSanitizeCellContent(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		// Math-mode input
+		{"$44.4 \\%$", "44.4%"},
+		{"$\\mathbf{8 0 . 7 \\%}$", "80.7%"},
+		{"$\\textbf{6 . 8 4}$ +/- $\\textbf{0 . 0 7}$", "6.84 +/- 0.07"},
+		{"$\\mathrm{1 2 3}$", "123"},
+		{"$\\mathbf{2 9 . 0 \\%}$", "29.0%"},
+
+		// Literal dollar input — should remain unchanged
+		{"$5.00", "$5.00"},
+		{"Price is $5.00", "Price is $5.00"},
+		{"\\$5.00", "\\$5.00"},
+
+		// No formatting
+		{"Plain text", "Plain text"},
+		{"123.45%", "123.45%"},
+	}
+
+	for _, tt := range tests {
+		result := sanitizeCellContent(tt.input)
+		if result != tt.expected {
+			t.Errorf("sanitizeCellContent(%q) = %q; want %q", tt.input, result, tt.expected)
+		}
+	}
+}

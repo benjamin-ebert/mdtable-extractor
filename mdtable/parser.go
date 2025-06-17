@@ -3,7 +3,7 @@ package mdtable
 import (
 	"bytes"
 	"fmt"
-	"strings"
+	"regexp"
 
 	"github.com/yuin/goldmark"
 	gmast "github.com/yuin/goldmark/ast"
@@ -44,7 +44,8 @@ func ExtractTables(markdown string) ([]Table, error) {
 					if err != nil {
 						return gmast.WalkStop, fmt.Errorf("walking cell: %w", err)
 					}
-					rowData = append(rowData, strings.TrimSpace(buf.String()))
+                    clean := sanitizeCellContent(buf.String())
+                    rowData = append(rowData, clean)
 				}
 				if isHeader {
 					header = rowData
@@ -64,4 +65,31 @@ func ExtractTables(markdown string) ([]Table, error) {
 	}
 
 	return tables, nil
+}
+
+var (
+	mathExprRE     = regexp.MustCompile(`\$(.+?)\$`)
+	latexCmdRE     = regexp.MustCompile(`\\[a-zA-Z]+\{([^{}]+)\}`)
+	whitespaceRE   = regexp.MustCompile(`\s+`)
+	backslashRE    = regexp.MustCompile(`\\`)
+)
+
+func sanitizeCellContent(s string) string {
+	// Replace all $...$ spans
+	return mathExprRE.ReplaceAllStringFunc(s, func(match string) string {
+		content := match[1 : len(match)-1] // remove surrounding $
+		
+		// Unwrap LaTeX commands like \textbf{...}, \mathrm{...}, \mathbf{...}
+		for latexCmdRE.MatchString(content) {
+			content = latexCmdRE.ReplaceAllString(content, `$1`)
+		}
+
+		// Remove any remaining backslashes
+		content = backslashRE.ReplaceAllString(content, "")
+
+		// Remove all whitespace
+		content = whitespaceRE.ReplaceAllString(content, "")
+
+		return content
+	})
 }
